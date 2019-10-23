@@ -1,0 +1,296 @@
+---
+title: "Statistical Publication Automation Guide"
+output:
+  html_document
+---
+
+```{r setup, include=FALSE}
+# These are the required packages for basic automation with markdown. These are all available via SCOTS and you should install them prior to proceeding. 
+
+knitr::opts_chunk$set(echo = TRUE)
+library(plotly)
+library(ggplot2)
+library(formattable)
+library(kableExtra)
+library(knitr)
+library(readxl)
+library(testthat)
+library(futile.logger)
+library(tidyverse)
+library(glue)
+```
+
+<h2> Introduction </h2>
+
+Note that this is not intended as a comprehensive guide to programming with R or the full suite of pckages available. This is merely meant as an introduction to the basic open-source tools available to government statisticians looking to automate statistical publications. Read through this guide and see what aspects of the RAP toolkit would be best suited for your project and follow the given links to understand how you may use them to a greater degree. 
+
+<h2> Set Up </h2>
+
+To start with, to execute R code within your markdown document, you enter it in the following format: 
+
+```{r}
+# Within this you may run functions and import files. This code wi, by default, execute whenever you knit the document. If you wish it to NOT run then include the following additional arguments:
+
+# {r, eval = FALSE}
+
+# By default, markdown will display these code chunks in your final document. If you wish them to be hidden, enter the following additional argument:
+
+# {r, echo = FALSE}
+
+```
+A full walkthrough on the various r setup commands can be found here: https://bookdown.org/yihui/rmarkdown/r-code.html.
+
+We will use the in-house data sets of iris and mtcars for most of this walkthrough but I will include sample code below showing how to read in multiple files that fit a particular pattern from a given directory. 
+
+If you are working from a particular in-house server for security purposes, such as your H drive, be sure to set this as your working directory to avoid accidental writing to the laptop hard drive:
+
+```{r, echo=TRUE, eval=FALSE}
+setwd <- "H://s023456/Department/Folder"
+```
+
+If you are handling sensitive data then you can customise RStudio to stop saving your history to your computer within the Global Options dropdown. To do this, click on the following tabs:
+
+Tools > Global Options > General > untick(Always save history) > Apply
+
+Outside of this, take care not to handle sensitive data in an irresponsible manner, exactly the same as you would with any other project. 
+
+<h2> Importing Data </h2>
+
+You can read in files directly from an SQL database, using the odbc package and save them to the folder we have set as our working directory. From here we may use the read_csv or read_excel commands to bring them into RStudio, manipulating the tables as we do so. If you are reading in csv files then use the following functions:
+
+```{r, echo=TRUE, eval=FALSE}
+
+# Read_csv function works as following:
+
+read_csv("Directory/Folder/File.csv")
+
+# Read_csv can be given supplimentary arguments. For example:
+
+# Trim_ws = TRUE will trim off empty whitespace from the original document
+
+# Doing this manually for all files is time consuming so we can tell R to search for and import all files that match a particular pattern. For example, this would tell R to grab all files of a csv format:
+
+data_path = getwd()
+
+files <- dir(data_path, pattern = "*.csv")
+
+data <- files %>%
+  map(~ read_csv(file.path(data_path, .)))
+
+# While the following would grab all files that have a particular date in the title:
+
+data_path = getwd()
+
+files <- dir(data_path, pattern = "*2019")
+
+data <- files %>%
+  map(~ read_csv(file.path(data_path, .)))
+
+```
+
+The full extent of the read_csv function can be studied here: https://readr.tidyverse.org/reference/read_delim.html.
+
+If you are looking to read in excel files then you will need the readxl package. Note: there is a package that is meant to be used for both reading and writing excel files, called xlsx, but it will not work on SCOTS due to Java incompatability so you'll need to do this the following way:
+
+```{r, echo=TRUE, eval=FALSE}
+
+barley <- read_excel("H:/Directory/Folder/File.xlsx", sheet=1, range = cell_rows(1:2))
+
+# The sheet argument allows us to specify a particular sheet to read in, the default is 1
+
+# Range allows us to read in a particular section. So for example, range = sheet1!B2:G16 will only read in data from cells B2 to G16 in sheet 1
+
+```
+
+More read_excel examples can be found here: https://readxl.tidyverse.org.
+
+We will look at the package writexl later in this guide.
+
+<h2> Data Maipulation with Tidyverse </h2>
+
+Once we have the data read into the RStudio environment, we can used the tidyverse package to manipulate the tables into a format better suited to our analysis and output. Note: Tidyverse is simply a collection of the most useful data manipulation packages, such as stringr and dplyr, in one single package. 
+
+The full extent of data manipulation tools available within the tidyverse suite of packages is beyond the scope of this guide but if you are interested in more advanced tidyverse training, consult with your line manager about Jumping Rivers who regularly provide training to gov employees in the Glasgow and Edinburgh areas. 
+
+<h2> Basic Styling </h2>
+
+Markdown, providing we are knitting to html, supports html script outside of our code blocks. In this manner, we can colour and adapt our text the same way we would use utilise CSS for webpage design. I am afraid you cannot use this background shading if you are producing a word document.  Shading is acheived with the style parameters. Define your div class then enter your chosen text / code chunk within a subsequent div: 
+
+<style>
+div.blue pre { background-color:lightblue; }
+</style>
+
+<div class = "blue">
+```{r, echo=FALSE}
+mtcars[1:5, ]
+
+print("text text text text")
+```
+</div>
+
+<h2> Table Styling </h2>
+
+Tables can be made more attractive and stylised using the kableExtra package. This format can be copied for insertion into excel documents if needed. Below is an example output using the mtcars dataframe. A tutorial on the full extent of kables capabilities can be found here: https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html
+
+```{r, echo=TRUE, results='asis'}
+mtcars[1:5, ] %>%
+  kable() %>%
+  kable_styling()
+```
+
+Alternatively, you could try displaying with formattable. A comprehensive walkthrough on the use of the formattable package can be found here: https://www.littlemissdata.com/blog/prettytables. Formattable may not seem very different but it can be used for some attractive visuals such as the table below where each cell will darken with a greater value: 
+
+```{r, echo=TRUE, results='asis'}
+mtcars[1:5, ] %>%
+  formattable()
+
+customGreen0 = "#DeF7E9"
+customGreen = "#71CA97"
+formattable(mtcars[1:5, ], align =c("l","c","c","c","c", "c", "c", "c", "c", "c", "c", "c"), list(
+  ` ` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")), 
+  `mpg`= color_tile(customGreen0, customGreen),
+  `cyl`= color_tile(customGreen0, customGreen),
+  `disp`= color_tile(customGreen0, customGreen),
+  `hp`= color_tile(customGreen0, customGreen),
+  `drat`= color_tile(customGreen0, customGreen),
+  `wt`= color_tile(customGreen0, customGreen), 
+  `qsec`= color_tile(customGreen0, customGreen),
+  `vs`= color_tile(customGreen0, customGreen),
+  `am`= color_tile(customGreen0, customGreen),
+  `gear`= color_tile(customGreen0, customGreen),
+  `carb`= color_tile(customGreen0, customGreen)
+))
+
+```
+
+<h2> Graphical Output </h2>
+
+The most capable and accessible graphical output packages are plotly and ggplot2. Plotly is best suited for attractive, colourful and reactive output while ggplot has more advanced features and allows high-level customisation. Plotly is ideal for dashboards for example, while ggplot is better suited for academic statistical models. For a more thorough walkthrough of and examples of how to output different types of graphs on plotly, visit: https://plot.ly/r/
+
+This colourful output demonstrates how plotly graphs can be designed with just a few lines of code:
+
+```{r, echo=TRUE}
+
+trace_0 <- rnorm(100, mean = 5)
+trace_1 <- rnorm(100, mean = 0)
+trace_2 <- rnorm(100, mean = -5)
+x <- c(1:100)
+
+data <- data.frame(x, trace_0, trace_1, trace_2)
+
+p <- plot_ly(data, x = ~x, y = ~trace_0, name = 'trace 0', type = 'scatter', mode = 'lines') %>%
+  add_trace(y = ~trace_1, name = 'trace 1', mode = 'lines+markers') %>%
+  add_trace(y = ~trace_2, name = 'trace 2', mode = 'markers')
+
+p
+```
+
+<h2> Unit Testing </h2>
+
+One of the advantages of automation is to build in testing at every step of your programme to automatically check for undesireable values in your code, such as duplicates or missing strings. The two most commonly used packages are testthat and futile.logger.
+
+In their simplest format, the syntax of a testthat function must be constructed with two arguments: our expected output and our actual output. 
+
+```{r, echo=TRUE}
+string <- "Testing is fun!"
+
+expect_match(string, "Testing is fun!")
+```
+
+If the test passes, and in this case it will as the strings match, then your markdown document will knit and the functions can be executed without issue. However, try changing the second argument in the expect_match function. If the test fails then an error message will be displayed and the markdown document will not knit. If you need to check that your functions or scirpt is outputting a particular value then this package is ideal. Testthat has many different functions for more customised testing, a complete walkthorugh can be found at: http://r-pkgs.had.co.nz/tests.html.
+
+In the context of automating statistical publications, another useful testing function is duplicated. With this function you can identify and remove identical values within vectors or columns. Here is an example using the iris dataframe to identify, extract and remove rows with duplicate values in the Petal.Length column: 
+
+```{r, echo=TRUE}
+table <- as_tibble(iris[1:5, ])
+
+table
+
+# Test for duplicate values - evaluates to true or false
+duplicated(table$Petal.Length)
+
+# Extract duplicate values
+extract_duplicates <- table$Petal.Length[duplicated(table$Petal.Length)]
+
+extract_duplicates
+
+# Remove rows with duplicate values from original table
+table <- table[!duplicated(table$Petal.Length), ]
+
+table
+```
+
+Another testing option is the futile.logger package. This is the unit testing package used in the Udemy RAP tutorial. It's strength is that it allows you to customise error messages produced when tests fail, meaking it easier to identify exactly what is going wrong with your data, especially if you have multiple tests. The syntax utilises conditional logic, asking the code to execute a particular command if a set of circumstances is met. 
+
+Good practise is to create a section of your code dedicated to testing the underlying data and work through the required tests in a methodical manner using the mtcars dataframe:
+
+```{r, echo=TRUE}
+# Checks
+futile.logger::flog.info("Initiating checks on dataframe object to ensure data is as expected")
+
+# This test should pass
+futile.logger::flog.debug("Checking that our object is a dataframe...")
+  if (!is.data.frame(mtcars))
+  {
+    futile.logger::flog.error("The object must be a dataframe", mtcars, capture = TRUE)
+  }
+
+# This test should fail
+futile.logger::flog.debug("Checking there are only the 3 columns we require...")
+  if (length(colnames(mtcars)) > 3)
+  {
+    futile.logger::flog.error("Your dataframe has more than 3 columns.")
+  }
+
+# This test should pass
+futile.logger::flog.debug("Checking there are no missing values...")
+  if (anyNA(mtcars)) stop("There cannot be missing values in your dataframe")
+```
+
+Note that failing tests will then publish their particular error message to your console window and appear in your markdown r script. This will help pinpoint exactly why your data isn't looking the way you want or why your build isn't completing. 
+
+Unit testing can be done to any degree you wish. We recommend building it in at stages where large amounts of data tidying and manipulation is taking place. 
+
+<h2> String Interpolation </h2>
+
+String interpolation is simply telling your markdown document to publish values that are reactive and based on your underlying output. This can allows you to automate the inclusion summary statistics and highlights, taking a lot of the leg work out of your final write-up. The two most commonly used functions for this are paste0 and glue. 
+
+Let's use these functions to produce highlights of the iris data set, note that they require different syntax but achieve largely the same result:
+
+```{r, echo=TRUE}
+# The glue function from the glue package
+greatest_value <- max(iris$Petal.Length)
+glue("The greatest petal length in the dataset is {greatest_value}")
+
+smallest_value <- min(iris$Petal.Width)
+paste0("The smallest petal width is ", smallest_value)
+```
+
+This can also be used in a more direct manner to call particular cell values:
+
+```{r, echo=TRUE}
+glue("The first value of petal width within the dataset is {iris$Petal.Width[1]}")
+```
+
+<h2> Exporting Data </h2>
+
+Exporting data in R can be in csv or excel format quite easily. Once again, you will need to specify the working directory to write to if yo uare working with any form of sensitive data. you will need to utilise the writexl and readr packages for each respectively.
+
+```{r, echo=TRUE, eval=FALSE}
+write_csv(data, "Directory/Folder/File.csv", append = FALSE, col_names = !append)
+
+write_xlsx(data, path = "Directory/Folder/File"(fileext = ".xlsx"), col_names = TRUE,
+  format_headers = TRUE)
+```
+
+In both cases, the initial command will create a new file. Using the append argument, you may append additional sheets to an existing file. For example, if you had three tables and wished to save them each as a sheet in the same file, you would pass these tables to the function in the form of a list:
+
+```{r, echo=TRUE, eval=FALSE}
+write_xlsx(c(table1, table2, table3), "Directory/Folder/File.xlsx", col_names = TRUE,
+  format_headers = TRUE)
+```
+
+
+
+
+
