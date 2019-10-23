@@ -1,0 +1,2 @@
+# Statistical-Publication-Automation-Guide
+Note that this is not intended as a comprehensive guide to programming with R or the full suite of pckages available. This is merely meant as an introduction to the basic open-source tools available to government statisticians looking to automate statistical publications. Read through this guide and see what aspects of the RAP toolkit would be best suited for your project and follow the given links to understand how you may use them to a greater degree. 
