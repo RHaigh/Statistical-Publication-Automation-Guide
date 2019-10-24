@@ -24,6 +24,8 @@ library(glue)
 
 Note that this is not intended as a comprehensive guide to programming with R or the full suite of pckages available. This is merely meant as an introduction to the basic open-source tools available to government statisticians looking to automate statistical publications. Read through this guide and see what aspects of the RAP toolkit would be best suited for your project and follow the given links to understand how you may use them to a greater degree. 
 
+For the purposes of this demonstration, we will knit to an HTML document as this affords us a greater variety of packages and otuput. You may knit to Word and Pdf but you will not be able to use much of the content below. For me personally, I will recommend you output your work report in HTML and copy and paste content to Word manually, saving graphs as .png or .pdf documents to insert if necessary. This workflow may not be the perfect solution but in most cases, it solves the problem and for you as a data scientist/statistician. The only extra thing you need to do is to educate your team about this. 
+
 <h2> Set Up </h2>
 
 To start with, to execute R code within your markdown document, you enter it in the following format: 
