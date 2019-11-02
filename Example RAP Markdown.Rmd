@@ -13,6 +13,7 @@ library(ggplot2)
 library(formattable)
 library(kableExtra)
 library(knitr)
+library(datasets)
 library(readxl)
 library(testthat)
 library(futile.logger)
@@ -22,9 +23,11 @@ library(glue)
 
 <h2> Introduction </h2>
 
-Note that this is not intended as a comprehensive guide to programming with R or the full suite of pckages available. This is merely meant as an introduction to the basic open-source tools available to government statisticians looking to automate statistical publications. Read through this guide and see what aspects of the RAP toolkit would be best suited for your project and follow the given links to understand how you may use them to a greater degree. 
+Note that this is not intended as a comprehensive guide to programming with R or the full suite of packages available. This is merely meant as an introduction to the basic open-source tools available to government statisticians looking to automate statistical publications. Read through this guide and see what aspects of the RAP toolkit would be best suited for your project and follow the given links to understand how you may use them to their full potential.  Think of this as a guide to "cherry-picking" the outputs you find most fit the aesthetic you want your publication to have. 
 
-For the purposes of this demonstration, we will knit to an HTML document as this affords us a greater variety of packages and otuput. You may knit to Word and Pdf but you will not be able to use much of the content below. For me personally, I will recommend you output your work report in HTML and copy and paste content to Word manually, saving graphs as .png or .pdf documents to insert if necessary. This workflow may not be the perfect solution but in most cases, it solves the problem and for you as a data scientist/statistician. The only extra thing you need to do is to educate your team about this. 
+For the purposes of this demonstration, we will knit to an HTML document as this affords us a greater variety of packages and outputs You may knit to Word and Pdf but you will not be able to use much of the content below. Personally, if you must output to Word, I will recommend you output your work report in HTML and copy and paste content to Word manually, saving graphs and tables as .png or .pdf documents to insert if necessary. This workflow may not be the perfect solution but, in most cases, it solves the problem. The only extra thing you need to do is to educate your team about this. 
+
+If this has piqued your curiosity and you want a more comprehensive walkthrough of popular RAP tools with a video guide, then we recommend Matthew Gregorys Udemy tutorial, found at: https://www.udemy.com/course/reproducible-analytical-pipelines//. Matthew Gregory is one of the pioneers of the RAP movement within the civil service and his guide will help you build a project from start to finish. 
 
 <h2> Set Up </h2>
 
@@ -55,6 +58,8 @@ If you are handling sensitive data then you can customise RStudio to stop saving
 Tools > Global Options > General > untick(Always save history) > Apply
 
 Outside of this, take care not to handle sensitive data in an irresponsible manner, exactly the same as you would with any other project. 
+
+If you want to learn more about setting up your R environment in a way that maximises speed and efficiency, then we recommend a read of Colin Gillespies excellent guide: https://csgillespie.github.io/efficientR/. Note that this requires a fairly high level understanding of how environment tools work and we only recommend this if you have the time to dedicate to in-depth IT training. If this is a little intimidating and you are just looking for a basic automation setup then what we have discussed so far will be sufficient. 
 
 <h2> Importing Data </h2>
 
@@ -108,7 +113,7 @@ More read_excel examples can be found here: https://readxl.tidyverse.org.
 
 We will look at the package writexl later in this guide.
 
-<h2> Data Maipulation with Tidyverse </h2>
+<h2> Data Manipulation with Tidyverse </h2>
 
 Once we have the data read into the RStudio environment, we can used the tidyverse package to manipulate the tables into a format better suited to our analysis and output. Note: Tidyverse is simply a collection of the most useful data manipulation packages, such as stringr and dplyr, in one single package. 
 
@@ -140,12 +145,15 @@ mtcars[1:5, ] %>%
   kable_styling()
 ```
 
-Alternatively, you could try displaying with formattable. A comprehensive walkthrough on the use of the formattable package can be found here: https://www.littlemissdata.com/blog/prettytables. Formattable may not seem very different but it can be used for some attractive visuals such as the table below where each cell will darken with a greater value: 
+Alternatively, you could try displaying with formattable. A comprehensive walkthrough on the use of the formattable package can be found here: https://www.littlemissdata.com/blog/prettytables. 
 
 ```{r, echo=TRUE, results='asis'}
 mtcars[1:5, ] %>%
   formattable()
+```
+Formattable may not seem very different from kable, the output certianly looks the same, but it can be used for some attractive visuals such as the table below where each cell will darken as the cell values increase: 
 
+```{r, echo=TRUE}
 customGreen0 = "#DeF7E9"
 customGreen = "#71CA97"
 formattable(mtcars[1:5, ], align =c("l","c","c","c","c", "c", "c", "c", "c", "c", "c", "c"), list(
@@ -164,12 +172,28 @@ formattable(mtcars[1:5, ], align =c("l","c","c","c","c", "c", "c", "c", "c", "c"
 ))
 
 ```
+Or supposing we wanted to use colours to graphically enhance the movements of our underlying data? Let's use the diff() function to create columns that mark the changes in the 'wind' column of the sample time series data 'airquality' and add corresponding colours and arrows:
+
+```{r, echo=TRUE}
+airquality_table <- airquality %>% # create two new columns using mutate
+  mutate(Change=c(diff(Wind),NA), 
+         "Movement"= "")
+
+airquality_table <- formattable(head(airquality_table, n=5), list(z=FALSE, 
+    `Change` = formatter("span",style = ~ style(color = ifelse(`Change` > 0,   "green", "red"))), 
+    `Movement`= formatter("span", style = ~ style(color = ifelse(`Change` > 0, "green", "red")), ~ icontext(ifelse(`Change` > 0,"arrow-up", "arrow-down"), `Movement`))))
+
+# We tell the function to render a different arrow / font colour depending on whether the movement is an increase or decrease. 
+  
+airquality_table
+
+```
 
 <h2> Graphical Output </h2>
 
 The most capable and accessible graphical output packages are plotly and ggplot2. Plotly is best suited for attractive, colourful and reactive output while ggplot has more advanced features and allows high-level customisation. Plotly is ideal for dashboards for example, while ggplot is better suited for academic statistical models. For a more thorough walkthrough of and examples of how to output different types of graphs on plotly, visit: https://plot.ly/r/
 
-This colourful output demonstrates how plotly graphs can be designed with just a few lines of code:
+This colourful output demonstrates how plotly graphs can be designed with just a few lines of code. Note the hover-over effect that echances your UX:
 
 ```{r, echo=TRUE}
 
@@ -187,6 +211,33 @@ p <- plot_ly(data, x = ~x, y = ~trace_0, name = 'trace 0', type = 'scatter', mod
 p
 ```
 
+Want a more classic look? Not to worry, you can achieve this with ggplot2. A comprehensive list of all the possible ggplot graphical outputs available can be found here, along with code snippets: http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html. Let us look at an example using the mt cars dataset:
+
+```{r, echo=TRUE}
+g <- ggplot(mpg, aes(displ)) + scale_fill_brewer(palette = "Spectral")
+
+graph <- g + geom_histogram(aes(fill=class), 
+                   binwidth = .1, 
+                   col="black", 
+                   size=.1) +  # change binwidth
+  labs(title="Insert Graph Title", 
+       subtitle="Engine Displacement across Vehicle Classes") +
+  theme_light()
+
+graph
+```
+
+Note the theme() argument passed to the ggplot function. Like dashboards and browsers, ggplot and plotly allow you to select your theme. This will be particularly important when customising graphical output to your departments standard. A complete list of themes can be found here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+Want the best of both worlds? You can create and customise your graphs in ggplot2 then add the visually pleasing javascript effects that come with plotly by using the ggplotly() function. This function takes ggplot graph objects as an argument and outputs them in the plotly format:
+
+```{r, echo=TRUE}
+graph <- ggplotly(graph)
+graph
+```
+
+
+
 <h2> Unit Testing </h2>
 
 One of the advantages of automation is to build in testing at every step of your programme to automatically check for undesireable values in your code, such as duplicates or missing strings. The two most commonly used packages are testthat and futile.logger.
@@ -199,9 +250,11 @@ string <- "Testing is fun!"
 expect_match(string, "Testing is fun!")
 ```
 
-If the test passes, and in this case it will as the strings match, then your markdown document will knit and the functions can be executed without issue. However, try changing the second argument in the expect_match function. If the test fails then an error message will be displayed and the markdown document will not knit. If you need to check that your functions or scirpt is outputting a particular value then this package is ideal. Testthat has many different functions for more customised testing, a complete walkthorugh can be found at: http://r-pkgs.had.co.nz/tests.html.
+If the test passes, and in this case it will as the strings match, then your markdown document will knit and the functions can be executed without issue, leaving you free to publish without worrying that an error has crept in without you noticing. 
 
-In the context of automating statistical publications, another useful testing function is duplicated. With this function you can identify and remove identical values within vectors or columns. Here is an example using the iris dataframe to identify, extract and remove rows with duplicate values in the Petal.Length column: 
+However, try changing the second argument in the expect_match function. If the test fails then an error message will be displayed and the markdown document will not knit. If you need to check that your functions or script are outputting a particular value then this package is ideal. Testthat has many different functions for more customised testing, a complete walkthrough can be found at: http://r-pkgs.had.co.nz/tests.html.
+
+In the context of automating statistical publications, another useful testing function is duplicated(). How often do you need to check for duplicate values in large datasets? With this function you can identify and remove identical values within vectors or columns. Here is an example using the iris dataframe to identify, extract and remove rows with duplicate values in the Petal.Length column: 
 
 ```{r, echo=TRUE}
 table <- as_tibble(iris[1:5, ])
@@ -221,10 +274,11 @@ table <- table[!duplicated(table$Petal.Length), ]
 
 table
 ```
+Make sure you label your testing functions in such a way that make sense.
 
-Another testing option is the futile.logger package. This is the unit testing package used in the Udemy RAP tutorial. It's strength is that it allows you to customise error messages produced when tests fail, meaking it easier to identify exactly what is going wrong with your data, especially if you have multiple tests. The syntax utilises conditional logic, asking the code to execute a particular command if a set of circumstances is met. 
+Another testing option is the futile.logger package. This is the unit testing package used in the Udemy RAP tutorial mentioned in the introduction It's strength is that it allows you to customise error messages produced when tests fail, making it easier to identify exactly what is going wrong with your data at every stage of the RAP process (especially useful if you have multiple tests). The syntax utilises conditional logic, asking the code to execute a particular command if a particular set of circumstances is met. 
 
-Good practise is to create a section of your code dedicated to testing the underlying data and work through the required tests in a methodical manner using the mtcars dataframe:
+Good practise is to create a section of your code dedicated to testing the underlying data and work through the required tests in a methodical manner. For example, say we have just imported the mtcars dataset and want to perform a series of checks before moving on to our next data wrangling step:
 
 ```{r, echo=TRUE}
 # Checks
@@ -249,9 +303,9 @@ futile.logger::flog.debug("Checking there are no missing values...")
   if (anyNA(mtcars)) stop("There cannot be missing values in your dataframe")
 ```
 
-Note that failing tests will then publish their particular error message to your console window and appear in your markdown r script. This will help pinpoint exactly why your data isn't looking the way you want or why your build isn't completing. 
+Note that failing tests will then publish their particular error message to your console window and appear in your markdown r script. This will help pinpoint exactly why your data isn't looking the way you want or why your build isn't completing. When the tests are all passing, we can move onto the next step of the pipeline. 
 
-Unit testing can be done to any degree you wish. We recommend building it in at stages where large amounts of data tidying and manipulation is taking place. 
+Unit testing can be done to any degree you wish. We recommend building it in at stages where large amounts of data tidying and wrangling is taking place. Build in unit testing where mistakes in your output / manipulation will have consequences later in the pipeline. 
 
 <h2> String Interpolation </h2>
 
