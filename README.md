@@ -4,6 +4,8 @@ Author: Richard Haigh
 
 Date of Intial Upload: 1/11/2019
 
+Written - R Desktop 3.5.2
+
 Environment: RStudio v1.2.1335
 
 Packages: 
