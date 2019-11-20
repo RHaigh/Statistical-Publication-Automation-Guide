@@ -23,4 +23,4 @@ glue v1.3.1
 
 A guide on the automation of statistical publications using markdown for analysts with a beginner level of coding experience. Note that this is not intended as a comprehensive guide to programming with R or the full suite of packages available. This is merely meant as an introduction to the basic open-source tools available to government statisticians looking to automate statistical publications. Read through this guide and see what aspects of the RAP toolkit would be best suited for your project and follow the given links to understand how you may use them to a greater degree. 
 
-Simply clone the git repository or copy the code manually int your RStudio session. Ensure your packages and environment align with those given above and knit the document, specifying HTML output. The guide is written in a linear fashion so simply read and follow the instructions. 
+Simply clone the git repository or copy the code manually into your RStudio session. Ensure your packages and environment align with those given above and knit the document, specifying HTML output. The guide is written in a linear fashion so simply read and follow the instructions. 
