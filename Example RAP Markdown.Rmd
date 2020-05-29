@@ -151,7 +151,7 @@ Alternatively, you could try displaying with formattable. A comprehensive walkth
 mtcars[1:5, ] %>%
   formattable()
 ```
-Formattable may not seem very different from kable, the output certianly looks the same, but it can be used for some attractive visuals such as the table below where each cell will darken as the cell values increase: 
+Formattable may not seem very different from kable, the output certainly looks the same, but it can be used for some attractive visuals such as the table below where each cell will darken as the cell value increases: 
 
 ```{r, echo=TRUE}
 customGreen0 = "#DeF7E9"
